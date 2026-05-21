@@ -25,7 +25,7 @@ const E = (name: string, sets: number, reps: number, weight: number, group: stri
 });
 
 const PLAN_WORKOUTS: Workout[] = [
-  W("2026-05-26","📅 ПЛАН — Верх А: Груди + Спина + Плечі","💪",[
+  W("2026-05-26","Верх: Груди + Спина + Плечі","💪",[
     E("Жим гантелей лежачи",4,12,12,"Груди","6+6 кг — контроль опускання"),
     E("Розведення гантелей лежачи",3,15,6,"Груди","3+3 кг — пауза внизу"),
     E("Пуловер лежачи з гантеллю",3,12,10,"Спина","Розтяжка грудей і спини"),
@@ -36,7 +36,7 @@ const PLAN_WORKOUTS: Workout[] = [
     E("Face pull — тяга каната на трапецію",3,15,15,"Плечі","Лікті вище плечей"),
     E("Прес — велосипед",3,20,0,"Прес",""),
   ]),
-  W("2026-05-27","📅 ПЛАН — Низ А: Сідниці + Ноги","🔥",[
+  W("2026-05-27","Низ: Сідниці + Ноги","🔥",[
     E("Жим платформи (ноги вище і ширше)",4,15,60,"Сідниці","Пята тисне в платформу"),
     E("Румунська тяга з гантелями",4,12,28,"Сідниці","14+14 кг — відчуй розтяжку"),
     E("Розгинання ніг в тренажері",3,15,15,"Ноги","Суперсет з румунською"),
@@ -47,7 +47,7 @@ const PLAN_WORKOUTS: Workout[] = [
     E("Ягодичний міст з вагою",3,15,20,"Сідниці","Резинка вище колін"),
     E("Прес — скручування",3,20,0,"Прес",""),
   ]),
-  W("2026-05-29","📅 ПЛАН — Верх Б: Спина + Плечі + Руки","⚡",[
+  W("2026-05-29","Верх: Спина + Плечі + Руки","⚡",[
     E("Підтягування в гравітроні",4,12,55,"Спина","Широкий хват"),
     E("Тяга в ричажному тренажері однією рукою",3,12,15,"Спина","По черзі, 7.5+7.5 кг"),
     E("Тяга нижнього блока сидячи",3,12,20,"Спина","Вузький хват"),
@@ -58,7 +58,7 @@ const PLAN_WORKOUTS: Workout[] = [
     E("Розгинання на трицепс з канатом",3,15,10,"Трицепс",""),
     E("Прес — підйом ніг",3,15,0,"Прес",""),
   ]),
-  W("2026-05-30","📅 ПЛАН — Низ Б: Ноги + Сідниці (акцент квадрицепс)","🔥",[
+  W("2026-05-30","Низ: Ноги + Сідниці акцент квадрицепс","🔥",[
     E("Присідання в тренажері Сміта",4,12,45,"Ноги","Носки трохи назовні"),
     E("Жим однією ногою в гравітроні",3,15,55,"Ноги","По черзі — баланс"),
     E("Болгарські випади з гантелями",3,10,10,"Ноги","5+5 кг по черзі"),
@@ -296,6 +296,7 @@ export default function WorkoutTracker() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filterGroup, setFilterGroup] = useState("Всі");
   const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
+  const [lastDoneId, setLastDoneId] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<Workout,"id">>({
     date: today(), name: "", mood: "💪",
     exercises: [blankExercise()]
@@ -304,6 +305,16 @@ export default function WorkoutTracker() {
   // drag state
   const dragIdx = useRef<number | null>(null);
   const dragOver = useRef<number | null>(null);
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const goBack = () => {
+    setView("log");
+    setTimeout(() => {
+      if (selectedId && cardRefs.current[selectedId]) {
+        cardRefs.current[selectedId]?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 80);
+  };
 
   const sorted = [...workouts].sort((a, b) => b.date.localeCompare(a.date));
   const filtered = filterGroup === "Всі" ? sorted : sorted.filter((w) => w.exercises.some((e) => e.group === filterGroup));
@@ -428,8 +439,8 @@ export default function WorkoutTracker() {
         .workout-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#c8ff00;border-radius:3px 0 0 3px;opacity:0;transition:opacity .2s}
         .workout-card:hover{border-color:#c8ff0033;transform:translateY(-2px)}
         .workout-card:hover::before{opacity:1}
-        .plan-card{border-color:#c8ff0033!important}
-        .plan-card::before{opacity:1!important}
+        .done-card{border-color:#c8ff0055!important;background:#0f1a00!important}
+        .done-card::before{opacity:1!important}
         .delete-btn{background:transparent;border:none;color:#444;cursor:pointer;font-size:16px;padding:4px 6px;border-radius:4px;transition:color .15s,background .15s;line-height:1}
         .delete-btn:hover{color:#ff4d4d;background:#ff4d4d18}
         .stat-box{background:#18181c;border:1px solid #2e2e36;border-radius:8px;padding:12px 16px;text-align:center}
@@ -470,16 +481,6 @@ export default function WorkoutTracker() {
         {/* ── LOG ── */}
         {view === "log" && (
           <div className="fade-in">
-            {/* plan banner */}
-            <div style={{ background: "#c8ff0012", border: "1px solid #c8ff0033", borderRadius: 10, padding: "12px 16px", marginBottom: 20 }}>
-              <div style={{ fontSize: 11, color: "#c8ff00", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: ".1em", marginBottom: 6 }}>📅 ПЛАН НА ТИЖДЕНЬ — ВЕРХ/НИЗ × 4</div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {["Пн — Верх А","Вт — Низ А","Чт — Верх Б","Пт — Низ Б"].map((d) => (
-                  <span key={d} style={{ fontSize: 11, color: "#e8e4dc", background: "#1e1e24", padding: "3px 10px", borderRadius: 4 }}>{d}</span>
-                ))}
-              </div>
-            </div>
-
             {/* filters */}
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
               {["Всі", ...MUSCLE_GROUPS].map((g) => (
@@ -508,11 +509,12 @@ export default function WorkoutTracker() {
             {/* cards */}
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {filtered.map((w, i) => {
-                const isPlan = w.name.startsWith("📅");
+                const isDone = lastDoneId === w.id;
                 return (
                   <div
                     key={w.id}
-                    className={`workout-card drag-card ${isPlan ? "plan-card" : ""}`}
+                    ref={(el) => { cardRefs.current[w.id] = el; }}
+                    className={`workout-card drag-card ${isDone ? "done-card" : ""}`}
                     draggable
                     onDragStart={() => onDragStart(i)}
                     onDragEnter={() => onDragEnter(i)}
@@ -520,20 +522,31 @@ export default function WorkoutTracker() {
                     onDragOver={(e) => e.preventDefault()}
                     onClick={() => { setSelectedId(w.id); setView("detail"); }}
                   >
+                    {isDone && (
+                      <div style={{ position: "absolute", top: 10, right: 48, fontSize: 11, color: "#c8ff00", background: "#c8ff0018", border: "1px solid #c8ff0044", borderRadius: 4, padding: "2px 8px", letterSpacing: ".06em", fontFamily: "'Bebas Neue',sans-serif" }}>
+                        ✓ ТУТ ЗУПИНИЛАСЬ
+                      </div>
+                    )}
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                       <div>
                         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                           <span style={{ fontSize: 20 }}>{w.mood}</span>
-                          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 17, letterSpacing: ".06em" }}>{w.name}</span>
+                          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: ".06em", color: isDone ? "#c8ff00" : "#ffffff" }}>{w.name}</span>
                         </div>
                         <div style={{ fontSize: 11, color: "#555", marginTop: 4 }}>
                           {formatDate(w.date)} &nbsp;·&nbsp; {w.exercises.length} вправ &nbsp;·&nbsp; {totalSets(w)} підходів
                         </div>
                       </div>
-                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: isDone ? 20 : 0 }}>
                         <div style={{ fontSize: 11, color: "#c8ff00", fontFamily: "'Bebas Neue',sans-serif" }}>
                           {totalVolume(w) > 0 ? `${totalVolume(w).toLocaleString()} кг` : "—"}
                         </div>
+                        <button
+                          title="Відмітити — тут зупинилась"
+                          style={{ background: isDone ? "#c8ff0022" : "transparent", border: `1px solid ${isDone ? "#c8ff00" : "#2e2e36"}`, color: isDone ? "#c8ff00" : "#555", cursor: "pointer", fontSize: 14, padding: "4px 7px", borderRadius: 4, transition: "all .15s", lineHeight: 1 }}
+                          onClick={(e) => { e.stopPropagation(); setLastDoneId(isDone ? null : w.id); }}>
+                          {isDone ? "✓" : "○"}
+                        </button>
                         <button className="btn-edit" onClick={(e) => startEdit(w, e)}>✏️</button>
                         <button className="delete-btn" onClick={(e) => { e.stopPropagation(); deleteWorkout(w.id); }}>✕</button>
                       </div>
@@ -553,7 +566,7 @@ export default function WorkoutTracker() {
         {/* ── DETAIL ── */}
         {view === "detail" && selected && (
           <div className="fade-in">
-            <button className="btn-ghost" onClick={() => setView("log")} style={{ marginBottom: 16, fontSize: 13 }}>← Назад</button>
+            <button className="btn-ghost" onClick={() => goBack()} style={{ marginBottom: 16, fontSize: 13 }}>← Назад</button>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 28 }}>{selected.mood}</span>
@@ -602,7 +615,7 @@ export default function WorkoutTracker() {
         {/* ── ADD ── */}
         {view === "add" && (
           <div className="fade-in">
-            <button className="btn-ghost" onClick={() => setView("log")} style={{ marginBottom: 16, fontSize: 13 }}>← Назад</button>
+            <button className="btn-ghost" onClick={() => goBack()} style={{ marginBottom: 16, fontSize: 13 }}>← Назад</button>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
               <div>
                 <div className="section-title">НАЗВА</div>
@@ -633,7 +646,7 @@ export default function WorkoutTracker() {
         {/* ── EDIT ── */}
         {view === "edit" && editingWorkout && (
           <div className="fade-in">
-            <button className="btn-ghost" onClick={() => setView("log")} style={{ marginBottom: 16, fontSize: 13 }}>← Назад</button>
+            <button className="btn-ghost" onClick={() => goBack()} style={{ marginBottom: 16, fontSize: 13 }}>← Назад</button>
             <div style={{ fontSize: 13, color: "#c8ff00", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: ".1em", marginBottom: 20 }}>РЕДАГУВАННЯ ТРЕНУВАННЯ</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
               <div>
