@@ -553,6 +553,7 @@ export default function WorkoutTracker() {
         {/* ── DETAIL ── */}
         {view === "detail" && selected && (
           <div className="fade-in">
+            <button className="btn-ghost" onClick={() => setView("log")} style={{ marginBottom: 16, fontSize: 13 }}>← Назад</button>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 28 }}>{selected.mood}</span>
@@ -601,6 +602,7 @@ export default function WorkoutTracker() {
         {/* ── ADD ── */}
         {view === "add" && (
           <div className="fade-in">
+            <button className="btn-ghost" onClick={() => setView("log")} style={{ marginBottom: 16, fontSize: 13 }}>← Назад</button>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
               <div>
                 <div className="section-title">НАЗВА</div>
@@ -631,6 +633,7 @@ export default function WorkoutTracker() {
         {/* ── EDIT ── */}
         {view === "edit" && editingWorkout && (
           <div className="fade-in">
+            <button className="btn-ghost" onClick={() => setView("log")} style={{ marginBottom: 16, fontSize: 13 }}>← Назад</button>
             <div style={{ fontSize: 13, color: "#c8ff00", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: ".1em", marginBottom: 20 }}>РЕДАГУВАННЯ ТРЕНУВАННЯ</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
               <div>
